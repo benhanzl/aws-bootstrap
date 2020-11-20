@@ -9,6 +9,11 @@ EC2_INSTANCE_TYPE=t2.micro
 AWS_ACCOUNT_ID=`aws sts get-caller-identity --profile $CLI_PROFILE --query "Account" --output text`
 CODEPIPELINE_BUCKET="$STACK_NAME-$REGION-codepipeline-$AWS_ACCOUNT_ID"
 
+GITHUB_ACCESS_TOKEN=$(cat ./.github/aws-bootstrap-access-token)
+GITHUB_OWNER=$(cat ./.github/aws-bootstrap-owner)
+GITHUB_REPO=$(cat ./.github/aws-bootstrap-repo)
+GITHUB_BRANCH=main
+
 # Deploy static resources
 echo -e "\n\n=========== Deploying setup.yml ==========="
 aws cloudformation deploy \
@@ -31,10 +36,16 @@ aws cloudformation deploy \
   --no-fail-on-empty-changeset \
   --capabilities CAPABILITY_NAMED_IAM \
   --parameter-overrides \
-    EC2InstanceType=$EC2_INSTANCE_TYPE
+    EC2InstanceType=$EC2_INSTANCE_TYPE \
+    GitHubOwner=$GITHUB_OWNER \
+    GitHubRepo=$GITHUB_REPO \
+    GitHubBranch=$GITHUB_BRANCH \
+    GitHubPersonalAccessToken=$GITHUB_ACCESS_TOKEN \
+    CodePipelineBucket=$CODEPIPELINE_BUCKET
 
 if [ $? -eq 0 ]; then
   aws cloudformation list-exports \
+    --region $REGION \
     --profile $CLI_PROFILE \
     --query "Exports[?Name=='InstanceEndpoint'].Value"
 fi
