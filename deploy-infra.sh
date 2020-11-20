@@ -47,5 +47,5 @@ if [ $? -eq 0 ]; then
   aws cloudformation list-exports \
     --region $REGION \
     --profile $CLI_PROFILE \
-    --query "Exports[?Name=='InstanceEndpoint'].Value"
+    --query "Exports[?starts_with(Name,'InstanceEndpoint')].Value"
 fi
